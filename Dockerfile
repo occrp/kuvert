@@ -9,7 +9,7 @@ ENV KUVERT_GID 1000
 ENV KUVERT_HOME /home/kuvert
 
 # install the needed CPAN modules
-RUN echo | cpan -i MIME::Parser Mail::Address Net::SMTPS Sys::Hostname Net::Server::Mail Authen::SASL IO::Socket::INET Filehandle File::Slurp File::Temp Fcntl Time::HiRes
+RUN cpan -i MIME::Parser Mail::Address Net::SMTPS Sys::Hostname Net::Server::Mail Authen::SASL IO::Socket::INET Filehandle File::Slurp File::Temp Fcntl Time::HiRes
 
 COPY ./ /usr/local/src/kuvert/
 RUN cd /usr/local/src/kuvert/ && \
