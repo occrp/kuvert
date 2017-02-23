@@ -9,7 +9,20 @@ ENV KUVERT_GID 1000
 ENV KUVERT_HOME /home/kuvert
 
 # install the needed CPAN modules
-RUN cpan -i MIME::Parser Mail::Address Net::SMTPS Sys::Hostname Net::Server::Mail Authen::SASL IO::Socket::INET Filehandle File::Slurp File::Temp Fcntl Time::HiRes
+# divided into separate RUN commands for easier debugging
+# (cpan's output does not lend itself to debugging very well...)
+RUN cpan -i MIME::Parser
+RUN cpan -i Mail::Address
+RUN cpan -i Net::SMTPS
+RUN cpan -i Sys::Hostname
+RUN cpan -i Net::Server::Mail
+RUN cpan -i Authen::SASL
+RUN cpan -i IO::Socket::INET
+RUN cpan -i FileHandle
+RUN cpan -i File::Slurp
+RUN cpan -i File::Temp
+RUN cpan -i Fcntl
+RUN cpan -i Time::HiRes
 
 COPY ./ /usr/local/src/kuvert/
 RUN cd /usr/local/src/kuvert/ && \
