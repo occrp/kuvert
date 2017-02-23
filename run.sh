@@ -17,17 +17,19 @@ echo "    +-- KUVERT_GID   : ${KUVERT_GID-<not set>}"
 
 # users' home directory
 # TODO feature/future proof it
-HOMEDIR="/home/${KUVERT_USER}"
+[ -z ${KUVERT_HOME+x} ] && KUVERT_HOME="/home/${KUVERT_USER}"
 
 # important directories
-[ -z ${KUVERT_LOGS_DIR+x} ] && KUVERT_LOGS_DIR="$HOMEDIR/logs"
-[ -z ${KUVERT_QUEUE_DIR+x} ] && KUVERT_QUEUE_DIR="$HOMEDIR/queue"
-[ -z ${KUVERT_CONFIG_DIR+x} ] && KUVERT_CONFIG_DIR="$HOMEDIR/config"
+[ -z ${KUVERT_LOGS_DIR+x} ] && KUVERT_LOGS_DIR="$KUVERT_HOME/logs"
+[ -z ${KUVERT_QUEUE_DIR+x} ] && KUVERT_QUEUE_DIR="$KUVERT_HOME/queue"
+[ -z ${KUVERT_GNUPG_DIR+x} ] && KUVERT_GNUPG_DIR="$KUVERT_HOME/gnupg"
+[ -z ${KUVERT_CONFIG_DIR+x} ] && KUVERT_CONFIG_DIR="$KUVERT_HOME/config"
 
 echo "+-- directories:"
-echo "    +-- HOMEDIR           : ${HOMEDIR}"
+echo "    +-- KUVERT_HOME       : ${KUVERT_HOME}"
 echo "    +-- KUVERT_LOGS_DIR   : ${KUVERT_LOGS_DIR}"
 echo "    +-- KUVERT_QUEUE_DIR  : ${KUVERT_QUEUE_DIR}"
+echo "    +-- KUVERT_GNUPG_DIR  : ${KUVERT_GNUPG_DIR}"
 echo "    +-- KUVERT_CONFIG_DIR : ${KUVERT_CONFIG_DIR}"
 
 
@@ -109,11 +111,11 @@ else
     # by default disable the password
     passwd -d "$KUVERT_USER"
     # create home
-    mkdir -p "/home/$KUVERT_USER"
+    mkdir -p "$KUVERT_HOME"
     # and make sure that permissions and ownership are set properly
     # but don't fail completely when that's not the case
-    chown -R "$KUVERT_USER:$KUVERT_GROUP" "/home/$KUVERT_USER" || echo "WARNING: changing ownership of /home/$KUVERT_USER failed!"
-    chmod -R ug+rwX "/home/$KUVERT_USER" || echo "WARNING: changing permissions on /home/$KUVERT_USER failed!"
+    chown -R "$KUVERT_USER:$KUVERT_GROUP" "$KUVERT_HOME" || echo "WARNING: changing ownership of $KUVERT_HOME failed!"
+    chmod -R ug+rwX "$KUVERT_HOME" || echo "WARNING: changing permissions on $KUVERT_HOME failed!"
 fi
 
 # the directories
@@ -121,20 +123,27 @@ echo "+-- handling directories..."
 echo "    +-- creating..."
 mkdir -p "$KUVERT_LOGS_DIR"
 mkdir -p "$KUVERT_QUEUE_DIR"
+mkdir -p "$KUVERT_GNUPG_DIR"
 mkdir -p "$KUVERT_CONFIG_DIR"
 echo "    +-- changing ownership..."
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
+chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR"
 echo "    +-- changing permissions..."
 chmod -R u=rwX,g=rX,o= "$KUVERT_LOGS_DIR"
-chmod -R u=rwX,g=rX,o= "$KUVERT_QUEUE_DIR"
+chmod -R u=rwX,go= "$KUVERT_QUEUE_DIR" # queue dir has to be readable only to kuvert user
+chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR" # gnupg home dir has to be readable only to kuvert user
 chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR"
 
 #
 # kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,
 # wherever we expect it to be
-ln -s "$KUVERT_CONFIG_DIR/kuvert.conf" "$HOMEDIR/.kuvert"
+ln -s "$KUVERT_CONFIG_DIR/kuvert.conf" "$KUVERT_HOME/.kuvert"
+
+# making sure the env is AOK
+export HOME="$KUVERT_HOME"
+export GNUPGHOME="$KUVERT_GNUPG_DIR"
 
 # inform
 echo "========================================================================"
@@ -142,10 +151,16 @@ echo "== Starting kuvert                                                    =="
 echo "========================================================================"
 
 # change directory
-echo "+-- changing directory to: $HOMEDIR"
-cd "$HOMEDIR"
+echo "+-- changing directory to: $KUVERT_HOME"
+cd "$KUVERT_HOME"
 
 # time for kuvert!
 echo "+-- changing user to: $KUVERT_USER"
+
+# let's check up on the keyring,
+# creating it if needed
+echo -ne "+-- keys in keyring: "
+gpg --list-keys 2>/dev/null | wc -l
+
 echo -e "+-- running:\n\t$*"
 exec su -p -c "env PATH=\"$PATH\" $*" "$KUVERT_USER"
