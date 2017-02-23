@@ -3,22 +3,32 @@
 # exit when any of the commands fails
 set -e
 
-# users' home directory
-# TODO feature/future proof it
-HOMEDIR="/home/${KUVERT_USER}"
-
 # we need the KUVERT_USER envvar
 [ -z ${KUVERT_USER+x} ] && KUVERT_USER="user"
 
 # we need the KUVERT_GROUP envvar, but we can get it from the username, right?
 [ -z ${KUVERT_GROUP+x} ] && KUVERT_GROUP="$KUVERT_USER"
 
-
 echo "+-- settings:"
 echo "    +-- KUVERT_USER  : $KUVERT_USER"
 echo "    +-- KUVERT_GROUP : $KUVERT_GROUP"
 echo "    +-- KUVERT_UID   : ${KUVERT_UID-<not set>}"
 echo "    +-- KUVERT_GID   : ${KUVERT_GID-<not set>}"
+
+# users' home directory
+# TODO feature/future proof it
+HOMEDIR="/home/${KUVERT_USER}"
+
+# important directories
+[ -z ${KUVERT_LOGS_DIR+x} ] && KUVERT_LOGS_DIR="$HOMEDIR/logs"
+[ -z ${KUVERT_QUEUE_DIR+x} ] && KUVERT_QUEUE_DIR="$HOMEDIR/queue"
+[ -z ${KUVERT_CONFIG_DIR+x} ] && KUVERT_CONFIG_DIR="$HOMEDIR/config"
+
+echo "+-- directories:"
+echo "    +-- HOMEDIR           : ${HOMEDIR}"
+echo "    +-- KUVERT_LOGS_DIR   : ${KUVERT_LOGS_DIR}"
+echo "    +-- KUVERT_QUEUE_DIR  : ${KUVERT_QUEUE_DIR}"
+echo "    +-- KUVERT_CONFIG_DIR : ${KUVERT_CONFIG_DIR}"
 
 
 # get group data, if any, and check if the group exists
@@ -105,6 +115,26 @@ else
     chown -R "$KUVERT_USER:$KUVERT_GROUP" "/home/$KUVERT_USER" || echo "WARNING: changing ownership of /home/$KUVERT_USER failed!"
     chmod -R ug+rwX "/home/$KUVERT_USER" || echo "WARNING: changing permissions on /home/$KUVERT_USER failed!"
 fi
+
+# the directories
+echo "+-- handling directories..."
+echo "    +-- creating..."
+mkdir -p "$KUVERT_LOGS_DIR"
+mkdir -p "$KUVERT_QUEUE_DIR"
+mkdir -p "$KUVERT_CONFIG_DIR"
+echo "    +-- changing ownership..."
+chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
+chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
+chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR"
+echo "    +-- changing permissions..."
+chmod -R u=rwX,g=rX,o= "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
+chmod -R u=rwX,g=rX,o= "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
+chmod -R u=rwX,g=rX,o= "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR"
+
+#
+# kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,
+# wherever we expect it to be
+ln -s "$HOMEDIR/.kuvert" "$KUVERT_CONFIG_DIR/kuvert.conf"
 
 # inform
 echo "========================================================================"

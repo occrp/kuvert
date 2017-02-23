@@ -28,7 +28,8 @@ COPY ./ /usr/local/src/kuvert/
 RUN cd /usr/local/src/kuvert/ && \
     make && \
     make install
-    
+
+# make sure entrypoint script is runnable
 RUN chmod a+x /usr/local/src/kuvert/run.sh
 
 ENTRYPOINT ["/usr/local/src/kuvert/run.sh"]
