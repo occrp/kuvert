@@ -48,7 +48,13 @@ mspass-from-query-secret f
 #msp /usr/sbin/sendmail -om -oi -oem
 
 can-detach f
+
+# smtp submission daemon settings
 maport 2587
+# this is requried for kuvert-smtp running in docker
+# to be available from outside of the container
+# it is a security risk in non-docker set-up!
+mahost 0.0.0.0
 ma-user kuvert
 ma-pass ChangeMe
 

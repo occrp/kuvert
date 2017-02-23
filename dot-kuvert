@@ -48,7 +48,13 @@ preamble f
 msp /usr/sbin/sendmail -om -oi -oem
 
 can-detach t
+
+# smtp submission daemon settings
+# do NOT change mahost unless you know what you're doing!
+# making smtp submission port available outside localhost
+# is a serious security risk
 # maport 2587
+# mahost 127.0.0.1
 # ma-user yourname
 # ma-pass somethingSECRET
 
