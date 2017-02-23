@@ -134,7 +134,7 @@ chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR"
 #
 # kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,
 # wherever we expect it to be
-ln -s "$HOMEDIR/.kuvert" "$KUVERT_CONFIG_DIR/kuvert.conf"
+ln -s "$KUVERT_CONFIG_DIR/kuvert.conf" "$HOMEDIR/.kuvert"
 
 # inform
 echo "========================================================================"
