@@ -1,12 +1,26 @@
 # ~/.kuvert: example configuration file for kuvert v2
+# to be used in a docker container
+#
+# there are a couple of strong assumptions in in this config file
+# as opposed to the default dot-kuvert
+# 
+# 1. SMTP submission is the default mechanism
+# 2. unattended operation means passwordless secret key
+# 3. only one secret key used and available, most probably
+#    auto-generated, so no need for defaultkey (let gpg select the key itself)
+# 4. submission via SMTP from outside the container requires binding to 0.0.0.0
+# 
+# WARNING: DO NOT USE THIS FILE IN A NON-DOCKER ENVIRONMENT
+# WARNING: UNLESS YOU KNOW WHAT YOU ARE DOING
 
 # options are given without leading whitespace
 
 # which key to sign with by default
-defaultkey 0x1234abcd
+# if unset, gpg chooses -- usually first available secret key
+#defaultkey 0x1234abcd
 
 # logging to syslog, which facility? defaults to no syslog
-syslog mail
+#syslog mail
 
 # no separate logfile
 logfile /home/kuvert/logs/kuvert.log
@@ -37,8 +51,9 @@ preamble f
 msserver smtp.example.com
 msport 587
 ssl starttls
-# ssl-key  mycerts/my.key.pem
-# ssl-cert mycerts/my.cert.pem
+#ssl-key  mycerts/my.key.pem
+#ssl-cert mycerts/my.cert.pem
+#ssl-ca mycerts/ca.cert.pem
 msuser kuvert@example.com
 mspass smtp-password
 mspass-from-query-secret f
@@ -58,11 +73,14 @@ mahost 0.0.0.0
 ma-user kuvert
 ma-pass ChangeMe
 
-defaultaction fallback-all
+defaultaction fallback
 
 alwaystrust t
 
-use-agent f
+# using gpg agent means that if a key is passwordless
+# (as might be the case in a docker-based deployment)
+# kuvert will not hang on asking the user for password
+use-agent t
 #query-secret /usr/bin/q-agent get %s
 #flush-secret /usr/bin/q-agent delete %s
 
