@@ -154,7 +154,7 @@ logit("$progname version $version starting");
 
 # fire up smtp server, iff not oneshot
 if (!$options{o} && 
-    $config{"ma-user"} && $config{"ma-pass"} && $config{"maport"})
+    $config{"ma-user"} && $config{"ma-pass"} && $config{"maport"} && $config{"mahost"})
 {
     # fork off the smtp-to-queue daemon
     my $pid=&start_mailserver;
@@ -752,7 +752,7 @@ sub handle_reload
     %email2key=&read_keyring;
     # restart mailserver if required
     # also update pidfile
-    if ($config{"ma-user"} && $config{"ma-pass"} && $config{"maport"})
+    if ($config{"ma-user"} && $config{"ma-pass"} && $config{"maport"} && $config{"mahost"})
     {
 	# fork off the smtp-to-queue daemon
 	my $pid=&start_mailserver;
@@ -816,6 +816,7 @@ sub read_config
 	 "mail-on-error"=>undef,
 	 "can-detach"=>0,
 	 maport=>2587,
+	 mahost=>"127.0.0.1",
 	 "ma-user"=>undef,
 	 "ma-pass"=>undef,
 	 preamble=>1,
@@ -885,7 +886,7 @@ with the new config file in place.\n");
 		$options{$key}=$value;
 	    }
 	    # nothing or string
-	    elsif ($key =~ /^(ma-pass|ma-user|mail-on-error|msserver|ssl(-cert|-key|-ca)?|msuser|mspass)$/)
+	    elsif ($key =~ /^(ma-pass|ma-user|mahost|mail-on-error|msserver|ssl(-cert|-key|-ca)?|msuser|mspass)$/)
 	    {
 		$options{$key}=$value;
 	    }
@@ -1452,9 +1453,9 @@ sub accept_mail
 {
     my $server = IO::Socket::INET->new(Listen=>1,
 				       ReuseAddr=>1,
-				       LocalAddr=>"127.0.0.1",
+				       LocalAddr=>$config{"mahost"},
 				       LocalPort=>$config{"maport"},);
-    bailout("setting up listening port failed: $!") if (!$server);
+    bailout("setting up listening host and port failed: $!") if (!$server);
     
     while(my $conn = $server->accept)
     {
@@ -2003,9 +2004,16 @@ X11 program with its own window.
 =item maport <portnumber>
 
 Kuvert can accept email for processing via SMTP. This option sets
-the TCP port kuvert listens on (localhost only). Default: 2587.
-Ignored if ma-user and ma-pass are not both set. If you want to use this 
-mechanism, tell your mail program to use localhost or 127.0.0.1 as outgoing
+the TCP port kuvert listens on (see mahost; by default localhost only).
+Default: 2587. Ignored if ma-user and ma-pass are not both set. If you want
+to use this mechanism, tell your mail program to use mahost as outgoing
+mail server and enable SMTP Authentication (see below).
+
+=item mahost <IP address>
+
+This option sets the IP address kuvert listens on. Default: localhost.
+Ignored if ma-user and ma-pass are not both set. If you want
+to use this mechanism, tell your mail program to use mahost as outgoing
 mail server and enable SMTP Authentication (see below).
 
 =item ma-user <username>
