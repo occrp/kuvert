@@ -160,7 +160,8 @@ echo "+-- changing user to: $KUVERT_USER"
 # let's check up on the keyring,
 # creating it if needed
 echo -ne "+-- keys in keyring: "
-gpg --list-keys 2>/dev/null | wc -l
+# this has to be run as the target user
+su -p -c "env PATH=\"$PATH\" gpg --list-keys" "$KUVERT_USER" 2>/dev/null | wc -l
 
 echo -e "+-- running:\n\t$*"
 exec su -p -c "env PATH=\"$PATH\" $*" "$KUVERT_USER"
