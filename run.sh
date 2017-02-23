@@ -144,6 +144,44 @@ ln -s "$KUVERT_CONFIG_DIR/kuvert.conf" "$KUVERT_HOME/.kuvert"
 # making sure the env is AOK
 export HOME="$KUVERT_HOME"
 export GNUPGHOME="$KUVERT_GNUPG_DIR"
+# make sure said settings will be in effect upon each and every
+# su - $KUVERT_USER within the container
+# as that's how we'll manage gpg the keyring...
+echo "export GNUPGHOME=\"$KUVERT_GNUPG_DIR\"" > "$KUVERT_HOME"/.profile
+chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_HOME"/.profile
+
+# let's check up on the keyring,
+# creating it if needed
+echo -ne "+-- keys in keyring: "
+# this has to be run as the target user
+su -p -c "env PATH=\"$PATH\" gpg --list-keys" "$KUVERT_USER" 2>/dev/null | egrep '^pub' | wc -l
+
+# if there are no secret keys in the keyring,
+# generate a new password-less secret key
+SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )"
+if [[ "$SECRET_KEYS" == "" ]]; then
+    echo "+-- no secret keys found, generating one for: $KUVERT_USER@localhost"
+    echo
+    echo "    WARNING: this secret key will not be password-protected!"
+    echo
+    # https://www.gnupg.org/documentation/manuals/gnupg/Unattended-GPG-key-generation.html
+    su -p -c "env PATH=\"$PATH\" gpg --batch --gen-key" "$KUVERT_USER" <<EOT
+%no-protection
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Name-Real: $KUVERT_USER
+Name-Comment: Auto-generated for kuvert testing, change as soon as possible
+Name-Email: $KUVERT_USER@localhost
+Expire-Date: 0
+# Do a commit here, so that we can later print "done" :-)
+%commit
+EOT
+    echo "    +-- done."
+else
+    echo -ne "+-- secret keys in keyring: "
+    echo "$SECRET_KEYS" | wc -l
+ff
 
 # inform
 echo "========================================================================"
@@ -156,12 +194,6 @@ cd "$KUVERT_HOME"
 
 # time for kuvert!
 echo "+-- changing user to: $KUVERT_USER"
-
-# let's check up on the keyring,
-# creating it if needed
-echo -ne "+-- keys in keyring: "
-# this has to be run as the target user
-su -p -c "env PATH=\"$PATH\" gpg --list-keys" "$KUVERT_USER" 2>/dev/null | wc -l
 
 echo -e "+-- running:\n\t$*"
 exec su -p -c "env PATH=\"$PATH\" $*" "$KUVERT_USER"
