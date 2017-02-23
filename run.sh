@@ -127,9 +127,9 @@ chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR"
 echo "    +-- changing permissions..."
-chmod -R u=rwX,g=rX,o= "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
-chmod -R u=rwX,g=rX,o= "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
-chmod -R u=rwX,g=rX,o= "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR"
+chmod -R u=rwX,g=rX,o= "$KUVERT_LOGS_DIR"
+chmod -R u=rwX,g=rX,o= "$KUVERT_QUEUE_DIR"
+chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR"
 
 #
 # kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,

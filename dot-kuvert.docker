@@ -34,31 +34,31 @@ preamble f
 # ssl-cert, ssl-key, ssl-ca;
 # authenticating as msuser, mspass
 #
-# msserver smtp.example.com
-# msport 587
-# ssl starttls
+msserver smtp.example.com
+msport 587
+ssl starttls
 # ssl-key  mycerts/my.key.pem
 # ssl-cert mycerts/my.cert.pem
-# msuser smtp-username
-# mspass smtp-password
-# mspass-from-query-secret f
+msuser kuvert@example.com
+mspass smtp-password
+mspass-from-query-secret f
 # 
 # 2. by using the msp program
 #
-msp /usr/sbin/sendmail -om -oi -oem
+#msp /usr/sbin/sendmail -om -oi -oem
 
 can-detach f
-# maport 2587
-# ma-user yourname
-# ma-pass somethingSECRET
+maport 2587
+ma-user kuvert
+ma-pass ChangeMe
 
 defaultaction fallback-all
 
 alwaystrust t
 
-use-agent t
-query-secret /usr/bin/q-agent get %s
-flush-secret /usr/bin/q-agent delete %s
+use-agent f
+#query-secret /usr/bin/q-agent get %s
+#flush-secret /usr/bin/q-agent delete %s
 
 # action specifications for recipients
 # are given with some leading whitespace
