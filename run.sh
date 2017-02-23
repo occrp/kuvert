@@ -158,7 +158,8 @@ su -p -c "env PATH=\"$PATH\" gpg --list-keys" "$KUVERT_USER" 2>/dev/null | egrep
 
 # if there are no secret keys in the keyring,
 # generate a new password-less secret key
-SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )"
+# "|| true" required due to "set -e", in case secret keyring is empty and egrep finds nothing
+SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )" || true
 if [[ "$SECRET_KEYS" == "" ]]; then
     echo "+-- no secret keys found, generating one for: $KUVERT_USER@localhost"
     echo
@@ -181,7 +182,7 @@ EOT
 else
     echo -ne "+-- secret keys in keyring: "
     echo "$SECRET_KEYS" | wc -l
-ff
+fi
 
 # inform
 echo "========================================================================"
