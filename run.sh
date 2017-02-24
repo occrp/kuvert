@@ -20,8 +20,10 @@ function watch_pubkeys {
             # permissions and ownership
             echo "        +-- making sure permissions are AOK..."
             # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
-            chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
-            chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+            chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+                echo "WARNING: unable to change ownership!"
+            chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+                echo "WARNING: unable to change permissions!"
             # now the important stuff
             echo "        +-- reloading kuvert config and keyring..."
             su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
@@ -158,12 +160,14 @@ echo "    +-- changing ownership..."
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
-chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR"
+chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR" || \
+    echo "WARNING: unable to change ownership of $KUVERT_CONFIG_DIR!"
 echo "    +-- changing permissions..."
 chmod -R u=rwX,g=rX,o= "$KUVERT_LOGS_DIR"
 chmod -R u=rwX,go= "$KUVERT_QUEUE_DIR" # queue dir has to be readable only to kuvert user
 chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR" # gnupg home dir has to be readable only to kuvert user
-chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR"
+chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR" || \
+    echo "WARNING: unable to change permissions of $KUVERT_CONFIG_DIR!"
 
 #
 # kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,
