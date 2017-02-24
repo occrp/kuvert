@@ -8,19 +8,26 @@ function watch_pubkeys {
     # FIXME we need to handle SIGHUP/SIGTERM/SIGKILL nicely some day
     while true; do
         # wait for events
+        set +e # yeah, inotifywatch can return a different return code than 0, and we have to be fine with that
         inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+        set -e # back to being strict about stuff
         # if a watched event occured, redo authorized_keys
         if [ $? -eq 0 ]; then
             echo "    +-- files in $KUVERT_GNUPG_DIR changed"
+            # we need to wait for gpg to finish its stuff
+            echo "        +-- continuing in 3s..."
+            sleep 3
+            # permissions and ownership
             echo "        +-- making sure permissions are AOK..."
-            chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
-            chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR"
+            # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
+            chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+            chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+            # now the important stuff
             echo "        +-- reloading kuvert config and keyring..."
             su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
         fi
     done
 }
-
 
 # exit when any of the commands fails
 set -e
