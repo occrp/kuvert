@@ -194,7 +194,8 @@ function watch_pubkeys {
         # if a watched event occured, redo authorized_keys
         if [ $? -eq 0 ]; then
             echo "    +-- files in $KUVERT_GNUPG_DIR changed"
-            echo "        reloading kuvert config and keuring..."
+            echo "        reloading kuvert config and keuring in 5s..."
+            sleep 5
             su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
         fi
     done
