@@ -1,5 +1,27 @@
 #!/bin/bash
 
+#
+# this function watches the $KUVERT_GNUPG_DIR files for changes
+# and re-loads kuvert's config and keychain when they're detected
+function watch_pubkeys {
+    echo "+-- watching for changes in $KUVERT_GNUPG_DIR"
+    # FIXME we need to handle SIGHUP/SIGTERM/SIGKILL nicely some day
+    while true; do
+        # wait for events
+        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+        # if a watched event occured, redo authorized_keys
+        if [ $? -eq 0 ]; then
+            echo "    +-- files in $KUVERT_GNUPG_DIR changed"
+            echo "        +-- making sure permissions are AOK..."
+            chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
+            chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR"
+            echo "        +-- reloading kuvert config and keyring..."
+            su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
+        fi
+    done
+}
+
+
 # exit when any of the commands fails
 set -e
 
@@ -182,26 +204,6 @@ else
     echo -ne "+-- secret keys in keyring: "
     echo "$SECRET_KEYS" | wc -l
 fi
-
-# this watches the $KUVERT_GNUPG_DIR files for changes
-# and re-loads kuvert's config and keychain when they're detected
-function watch_pubkeys {
-    echo "+-- watching for changes in $KUVERT_GNUPG_DIR"
-    # FIXME we need to handle SIGHUP/SIGTERM/SIGKILL nicely some day
-    while true; do
-        # wait for events
-        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
-        # if a watched event occured, redo authorized_keys
-        if [ $? -eq 0 ]; then
-            echo "    +-- files in $KUVERT_GNUPG_DIR changed"
-            echo "        +-- making sure permissions are AOK..."
-            chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
-            chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR"
-            echo "        +-- reloading kuvert config and keyring..."
-            su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
-        fi
-    done
-}
 
 # watch for changes with the keyring in the background
 # when changes are detected, kuvert gets reloaded
