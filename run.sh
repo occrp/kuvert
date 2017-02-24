@@ -190,12 +190,14 @@ function watch_pubkeys {
     # FIXME we need to handle SIGHUP/SIGTERM/SIGKILL nicely some day
     while true; do
         # wait for events
-        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR"
+        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
         # if a watched event occured, redo authorized_keys
         if [ $? -eq 0 ]; then
             echo "    +-- files in $KUVERT_GNUPG_DIR changed"
-            echo "        reloading kuvert config and keuring in 5s..."
-            sleep 5
+            echo "        +-- making sure permissions are AOK..."
+            chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
+            chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR"
+            echo "        +-- reloading kuvert config and keyring..."
             su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
         fi
     done
