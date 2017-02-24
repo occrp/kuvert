@@ -8,6 +8,14 @@ ENV KUVERT_UID 1000
 ENV KUVERT_GID 1000
 ENV KUVERT_HOME /home/kuvert
 
+# install inotify-tools
+RUN DEBIAN_FRONTEND=noninteractive apt-get -q update && \
+    apt-get -q -y --no-install-recommends install \
+        inotify-tools && \
+    apt-get -q clean && \
+    apt-get -q -y autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
 # install the needed CPAN modules
 # divided into separate RUN commands for easier debugging
 # (cpan's output does not lend itself to debugging very well...)
@@ -33,4 +41,4 @@ RUN cd /usr/local/src/kuvert/ && \
 RUN chmod a+x /usr/local/src/kuvert/run.sh
 
 ENTRYPOINT ["/usr/local/src/kuvert/run.sh"]
-CMD ["kuvert"]
+CMD ["kuvert", "-d"]

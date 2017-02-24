@@ -175,7 +175,6 @@ Name-Real: $KUVERT_USER
 Name-Comment: Auto-generated for kuvert testing, change as soon as possible
 Name-Email: $KUVERT_USER@localhost
 Expire-Date: 0
-# Do a commit here, so that we can later print "done" :-)
 %commit
 EOT
     echo "    +-- done."
@@ -183,6 +182,28 @@ else
     echo -ne "+-- secret keys in keyring: "
     echo "$SECRET_KEYS" | wc -l
 fi
+
+# this watches the $KUVERT_GNUPG_DIR files for changes
+# and re-loads kuvert's config and keychain when they're detected
+function watch_pubkeys {
+    echo "+-- watching for changes in $KUVERT_GNUPG_DIR"
+    # FIXME we need to handle SIGHUP/SIGTERM/SIGKILL nicely some day
+    while true; do
+        # wait for events
+        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR"
+        # if a watched event occured, redo authorized_keys
+        if [ $? -eq 0 ]; then
+            echo "    +-- files in $KUVERT_GNUPG_DIR changed"
+            echo "        reloading kuvert config and keuring..."
+            su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
+        fi
+    done
+}
+
+# watch for changes with the keyring in the background
+# when changes are detected, kuvert gets reloaded
+watch_pubkeys &
+sleep 1
 
 # inform
 echo "========================================================================"
