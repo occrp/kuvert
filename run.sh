@@ -171,8 +171,10 @@ chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR" || \
 
 #
 # kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,
-# wherever we expect it to be
-ln -s "$KUVERT_CONFIG_DIR/kuvert.conf" "$KUVERT_HOME/.kuvert"
+# wherever we expect it to be; unless it already exists, that is
+if [ ! -e "$KUVERT_HOME/.kuvert" ]; then
+    ln -s "$KUVERT_CONFIG_DIR/kuvert.conf" "$KUVERT_HOME/.kuvert"
+fi
 
 # making sure the env is AOK
 export HOME="$KUVERT_HOME"
