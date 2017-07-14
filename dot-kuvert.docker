@@ -15,7 +15,7 @@
 
 # options are given without leading whitespace
 
-# which key to sign with by default
+# which key to sign with by default, long keyid recommended
 # if unset, gpg chooses -- usually first available secret key
 #defaultkey 0x1234abcd
 
@@ -62,6 +62,8 @@ mspass-from-query-secret f
 #
 #msp /usr/sbin/sendmail -om -oi -oem
 
+# we should not detach when running in docker
+# otherwise docker container dies
 can-detach f
 
 # smtp submission daemon settings
@@ -99,3 +101,7 @@ use-agent t
 # majordomo and similar mailinglist systems get plain mail
  (majordomo|-request)@	none
 
+# if you want no mail involving this address to go out unencrypted,
+# set mustencrypt. any addresses with mustencrypt but no key cause the
+# hole mail to be rejected. mustencrypt overrides fallback and fallback-all.
+ somebody.with.a.key@example.org	mustencrypt
