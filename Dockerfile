@@ -31,6 +31,8 @@ RUN /usr/bin/cpan -i File::Slurp
 RUN /usr/bin/cpan -i File::Temp
 RUN /usr/bin/cpan -i Fcntl
 RUN /usr/bin/cpan -i Time::HiRes
+RUN /usr/bin/cpan -i Proc::ProcessTable
+RUN /usr/bin/cpan -i Encode::Locale
 
 COPY ./ /usr/local/src/kuvert/
 RUN cd /usr/local/src/kuvert/ && \
