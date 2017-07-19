@@ -6,6 +6,7 @@ ENV KUVERT_USER kuvert
 ENV KUVERT_GROUP kuvert
 ENV KUVERT_UID 1000
 ENV KUVERT_GID 1000
+ENV KUVERT_TEMP_DIR /tmp/kuvert
 ENV KUVERT_HOME /home/kuvert
 
 # install inotify-tools

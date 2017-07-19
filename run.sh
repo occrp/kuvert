@@ -57,6 +57,7 @@ echo "    +-- KUVERT_GID   : ${KUVERT_GID-<not set>}"
 [ -z ${KUVERT_CONFIG_DIR+x} ] && KUVERT_CONFIG_DIR="$KUVERT_HOME/config"
 
 echo "+-- directories:"
+echo "    +-- KUVERT_TEMP_DIR   : ${KUVERT_TEMP_DIR}"
 echo "    +-- KUVERT_HOME       : ${KUVERT_HOME}"
 echo "    +-- KUVERT_LOGS_DIR   : ${KUVERT_LOGS_DIR}"
 echo "    +-- KUVERT_QUEUE_DIR  : ${KUVERT_QUEUE_DIR}"
@@ -152,11 +153,13 @@ fi
 # the directories
 echo "+-- handling directories..."
 echo "    +-- creating..."
+mkdir -p "$KUVERT_TEMP_DIR"
 mkdir -p "$KUVERT_LOGS_DIR"
 mkdir -p "$KUVERT_QUEUE_DIR"
 mkdir -p "$KUVERT_GNUPG_DIR"
 mkdir -p "$KUVERT_CONFIG_DIR"
 echo "    +-- changing ownership..."
+chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_TEMP_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_LOGS_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_QUEUE_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
@@ -169,7 +172,8 @@ chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR" # gnupg home dir has to be readable only 
 chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR" || \
     echo "WARNING: unable to change permissions of $KUVERT_CONFIG_DIR!"
 
-#
+# 
+# TODO: check if the target file exists and is readable!
 # kuvert explicitly expects the config file to be ~/.kuvert, so we need to link it to the actual config file,
 # wherever we expect it to be; unless it already exists, that is
 if [ ! -e "$KUVERT_HOME/.kuvert" ]; then
