@@ -166,6 +166,7 @@ chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR"
 chown -R "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_CONFIG_DIR" || \
     echo "WARNING: unable to change ownership of $KUVERT_CONFIG_DIR!"
 echo "    +-- changing permissions..."
+chown -R u=rwX,go=  "$KUVERT_TEMP_DIR"
 chmod -R u=rwX,g=rX,o= "$KUVERT_LOGS_DIR"
 chmod -R u=rwX,go= "$KUVERT_QUEUE_DIR" # queue dir has to be readable only to kuvert user
 chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR" # gnupg home dir has to be readable only to kuvert user
