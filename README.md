@@ -46,7 +46,7 @@ Directories will be created and correct permissions will be set. If no GnuPG key
 
 User, group, `uid`, and `gid` of the user that will be created in the docker container and under which `kuvert` will be run.
 
- - `KUVERT_TEMP_DIR` (default: `/tmp/kuvert`)
+ - `KUVERT_TEMP_DIR` (default: `/tmp/kuvert_temp`)
  
 Temporary files directory. It will be created. Make sure it matches the `tempdir` option from the config file.
 
