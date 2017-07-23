@@ -12,6 +12,11 @@ ENV KUVERT_HOME /home/kuvert
 # install inotify-tools
 RUN DEBIAN_FRONTEND=noninteractive apt-get -q update && \
     apt-get -q -y --no-install-recommends install \
+        # without it we're going to be getting weird errors like:
+        # SMTP auth failed: 500 Command unknown: 'AUTH'
+        # cannot connect to mail server example.org
+        ca-certificates \
+        # required for monitoring of the gnupg directory for changes
         inotify-tools && \
     apt-get -q clean && \
     apt-get -q -y autoremove && \
