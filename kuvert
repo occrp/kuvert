@@ -1102,13 +1102,13 @@ sub send_entity
 
 		my $s=Net::SMTPS->new( $config{msserver}, Port => $config{msport},
 													 Hello => $dom,
-													 doSSL => $config{ssl},
+													 (($config{ssl} && $config{ssl} ne 'starttls') ? (SSL => 1) : ()),
 													 SSL_key_file => $config{"ssl-key"},
 													 SSL_cert_file => $config{"ssl-cert"},
 													 SSL_ca_file => $config{"ssl-ca"} );
 		return("Cannot connect to mail server ".$config{msserver}.": $!")
 				if (!$s);
-
+                if ($config{ssl} and $config{ssl} eq 'starttls') { $s->starttls or die "Starttls failed: $@" }
 		# do smtp auth if asked to
 		if ($config{msuser})
 		{
