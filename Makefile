@@ -1,6 +1,8 @@
 # well, a simpler makefile is hardly imaginable...
 DESTDIR=
 
+PERLDIR := $(shell perl -e 'print $$INC[0]')
+
 # the version number of the package
 VERSION=$(shell sed -n '1s/^.*(\(.*\)).*$$/\1/p' debian/changelog)
 
@@ -16,13 +18,13 @@ clean:
 
 install:	kuvert_submit  kuvert
 	install -d $(DESTDIR)/usr/bin $(DESTDIR)/usr/share/man/man1 \
-	$(DESTDIR)$(shell perl -e 'print $INC[0]')/Net/Server/Mail/ESMTP/
+	$(DESTDIR)$(PERLDIR)/Net/Server/Mail/ESMTP/
 	install kuvert_submit $(DESTDIR)/usr/bin
 # fix the version number
 	sed 's/INSERT_VERSION/$(VERSION)/' kuvert > kuvert.tmp
 	install kuvert.tmp $(DESTDIR)/usr/bin/kuvert
 	-rm kuvert.tmp
-	install plainAUTH.pm $(DESTDIR)$(shell perl -e 'print $INC[0]')/Net/Server/Mail/ESMTP/
+	install plainAUTH.pm $(DESTDIR)$(PERLDIR)/Net/Server/Mail/ESMTP/
 	pod2man --center="User Commands" -r Mail  kuvert $(DESTDIR)/usr/share/man/man1/kuvert.1
 	pod2man --center="User Commands" -r Mail kuvert_submit.pod $(DESTDIR)/usr/share/man/man1/kuvert_submit.1
 
