@@ -16,7 +16,7 @@ clean:
 
 install:	kuvert_submit  kuvert
 	install -d $(DESTDIR)/usr/bin $(DESTDIR)/usr/share/man/man1 \
-	$(DESTDIR)/usr/share/perl5/Net/Server/Mail/ESMTP/
+	$(DESTDIR)$(shell perl -MConfig -e ' $Config{vendorlib}')/Net/Server/Mail/ESMTP/
 	install kuvert_submit $(DESTDIR)/usr/bin
 # fix the version number
 	sed 's/INSERT_VERSION/$(VERSION)/' kuvert > kuvert.tmp
