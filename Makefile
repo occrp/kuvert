@@ -22,7 +22,7 @@ install:	kuvert_submit  kuvert
 	sed 's/INSERT_VERSION/$(VERSION)/' kuvert > kuvert.tmp
 	install kuvert.tmp $(DESTDIR)/usr/bin/kuvert
 	-rm kuvert.tmp
-	install plainAUTH.pm $(DESTDIR)/usr/share/perl5/Net/Server/Mail/ESMTP/
+	install plainAUTH.pm $(DESTDIR)$(shell perl -MConfig -e ' $Config{vendorlib}')/Net/Server/Mail/ESMTP/
 	pod2man --center="User Commands" -r Mail  kuvert $(DESTDIR)/usr/share/man/man1/kuvert.1
 	pod2man --center="User Commands" -r Mail kuvert_submit.pod $(DESTDIR)/usr/share/man/man1/kuvert_submit.1
 

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # this file is part of kuvert, a mailer wrapper that
 # does gpg signing/signing+encrypting transparently, based
