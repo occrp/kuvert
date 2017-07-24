@@ -1,7 +1,7 @@
 # well, a simpler makefile is hardly imaginable...
 DESTDIR=
 
-PERLDIR := $(shell perl -e 'print $$INC[0]')
+PERLDIR := $(shell perl -MConfig -e 'print $$Config{sitelib}')
 
 # the version number of the package
 VERSION=$(shell sed -n '1s/^.*(\(.*\)).*$$/\1/p' debian/changelog)
