@@ -28,7 +28,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -q update && \
 RUN cpan -i MIME::Parser
 RUN cpan -i Mail::Address
 RUN cpan -i Net::SMTP
-RUN cpan -i Net::SMTPS
 RUN cpan -i Sys::Hostname
 RUN cpan -i Net::Server::Mail
 RUN cpan -i Authen::SASL

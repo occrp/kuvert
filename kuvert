@@ -27,7 +27,7 @@ use Fcntl qw(:flock);
 use Getopt::Std;
 use MIME::Parser;		# for parsing the mime-stream
 use Mail::Address;		# for parsing to and cc-headers
-use Net::SMTPS;			# for sending via smtp, which ssl
+use Net::SMTP;			# for sending via smtp
 use Sys::Hostname;		# ditto
 use Net::Server::Mail::ESMTP;	# for receiving via smtp
 use IO::Socket::INET;		# ditto
@@ -1100,7 +1100,7 @@ sub send_entity
 	{
 		my $dom=hostname;
 
-		my $s=Net::SMTPS->new( $config{msserver}, Port => $config{msport},
+		my $s=Net::SMTP->new( $config{msserver}, Port => $config{msport},
 													 Hello => $dom,
 													 (($config{ssl} && $config{ssl} ne 'starttls') ? (SSL => 1) : ()),
 													 SSL_key_file => $config{"ssl-key"},
