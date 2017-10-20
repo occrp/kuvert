@@ -176,8 +176,14 @@ chmod -R u=rwX,go= "$KUVERT_GNUPG_DIR" # gnupg home dir has to be readable only 
 chmod -R u=rwX,g=rX,o= "$KUVERT_CONFIG_DIR" || \
     echo "WARNING: unable to change permissions of $KUVERT_CONFIG_DIR!"
 
+#
+# generate the config file if needed
+#
+
+source "$( dirname $0 )/generate-kuvert-conf.sh"
+
 # 
-# check if the target file exists...
+# reality-check if the config file exists...
 if [ ! -e "$KUVERT_CONFIG_DIR/kuvert.conf" ]; then
     echo "ERROR: config file '$KUVERT_CONFIG_DIR/kuvert.conf' doesn't exist!"
     exit 6

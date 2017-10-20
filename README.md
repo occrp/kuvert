@@ -68,7 +68,75 @@ GnuPG data directory, containing the keyring. Location will be used by `kuvert` 
  
  - `KUVERT_CONFIG_DIR` (default: `$KUVERT_HOME/config`)
  
-Config directory, should contain a `kuvert.conf` file, which will be automagically symlinked as `$KUVERT_HOME/.kuvert` in order for `kuvert` to use it. The directory will be created and permissions will be set as required. Volume-mount it into the docker container upon running it to make the config from the host system available in the container for `kuvert` to use. Without it, `kuvert` will complain about there not being any config file, and exit.
+Config directory, should contain a `kuvert.conf` file, which will be used it by `kuvert`. The directory will be created and permissions will be set as required. Volume-mount it into the docker container upon running it to make the config from the host system available in the container for `kuvert` to use. If the config file is not provided, an attempt will be made to generate one (read on).
+
+### Generated config
+
+Optionally, a config file can be auto-generated based on environment variables from this section. The config will be generated if `$KUVERT_CONFIG_DIR/kuvert.conf` file does not exist (otherwise it is assumed that it contains a valid config).
+
+Please note, not all `kuvert` config options are exposed this way, since exposing some would simply not make any sense. Certain assumptions are made in the generated config file, please refer to comments in `generate-kuvert-conf.sh` file.
+
+ - `$KUVERT_CFG_DEFAULTKEY` (optional)
+    kuvert config option: `defaultkey`)
+
+ - `$KUVERT_CFG_LOGFILE` (default: "`$KUVERT_LOGS_DIR/kuvert.log`")
+    kuvert config option: `logfile`
+    
+ - `$KUVERT_CFG_MAILONERROR` (optional)
+    kuvert config option: `mail-on-error`
+    
+ - `$KUVERT_CFG_INTERVAL` (default: "`60`")
+    kuvert config option: `interval`
+ 
+ - `$KUVERT_CFG_IDENTIFY` (default: "`f`")
+    kuvert config option: `identify`
+    
+ - `$KUVERT_CFG_PREAMBLE` (default: "`f`")
+    kuvert config option: `preamble`
+    
+ - `$KUVERT_CFG_MSSERVER` (**mandatory**)
+    kuvert config option: `msserver`
+    
+ - `$KUVERT_CFG_MSPORT` (default: "`587`")
+    kuvert config option: `msport`
+    
+ - `$KUVERT_CFG_SSL` (default: "`starttls`")
+    kuvert config option: `ssl`
+    Notice: the way this option is handled means it's impossible to use cleartext connections when using a generated `kuvert.conf`.
+    
+ - `$KUVERT_CFG_SSLKEY` (optional)
+    kuvert config option: `ssl-key`
+    
+ - `$KUVERT_CFG_SSLCERT` (optional)
+    kuvert config option: `ssl-cert`
+    
+ - `$KUVERT_CFG_SSLCA` (optional)
+    kuvert config option: `ssl-ca`
+    
+ - `$KUVERT_CFG_MSUSER` (**mandatory**)
+    kuvert config option: `msuser`
+    
+ - `$KUVERT_CFG_MSPASS` (**mandatory**)
+    kuvert config option: `mspass`
+    
+ - `$KUVERT_CFG_MAPORT` (default: "`2587`")
+    kuvert config option: `maport`
+    
+ - `$KUVERT_CFG_MAHOST` (default: "`0.0.0.0`")
+    kuvert config option: `mahost`
+    
+ - `$KUVERT_CFG_MAUSER` (default: "`kuvert`")
+    kuvert config option: `ma-user`
+    
+ - `$KUVERT_CFG_MAPASS` (**mandatory**)
+    kuvert config option: `ma-pass`
+    
+ - `$KUVERT_CFG_DEFAULTACTION` (default: "`fallback`")
+    kuvert config option: `defaultaction`
+    
+ - `$KUVERT_CFG_ALWAYSTRUST` (default: "`t`")
+    kuvert config option: `alwaystrust`
+    
 
 ### Reporting issues with docker configuration
 
