@@ -9,7 +9,16 @@ function watch_pubkeys {
     while true; do
         # wait for events
         set +e # yeah, inotifywatch can return a different return code than 0, and we have to be fine with that
-        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx
+        
+        # watch for files depending on GnuPG version
+        if stat -t *.gpg~ >/dev/null 2>&1 ; then
+            # GnuPG v1.x
+            inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+        else
+            # GnuPG v2.x
+            inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx
+        fi
+        
         set -e # back to being strict about stuff
         # if a watched event occured, redo authorized_keys
         if [ $? -eq 0 ]; then
@@ -19,11 +28,21 @@ function watch_pubkeys {
             sleep 3
             # permissions and ownership
             echo "        +-- making sure permissions are AOK..."
-            # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
-            chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
-                echo "WARNING: unable to change ownership!"
-            chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
-                echo "WARNING: unable to change permissions!"
+            
+            # which GnuPG version are we talking about
+            if stat -t *.gpg~ >/dev/null 2>&1 ; then
+                # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
+                chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+                    echo "WARNING: unable to change ownership!"
+                chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+                    echo "WARNING: unable to change permissions!"
+            else
+                # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
+                chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
+                    echo "WARNING: unable to change ownership!"
+                chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
+                    echo "WARNING: unable to change permissions!"
+            fi
             # now the important stuff
             echo "        +-- reloading kuvert config and keyring..."
             su -p -c "env PATH=\"$PATH\" kuvert -r -c \"${KUVERT_CONFIG_DIR}/kuvert.conf\"" "$KUVERT_USER"
