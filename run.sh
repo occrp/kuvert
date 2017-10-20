@@ -9,7 +9,7 @@ function watch_pubkeys {
     while true; do
         # wait for events
         set +e # yeah, inotifywatch can return a different return code than 0, and we have to be fine with that
-        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
+        inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx
         set -e # back to being strict about stuff
         # if a watched event occured, redo authorized_keys
         if [ $? -eq 0 ]; then
@@ -20,13 +20,13 @@ function watch_pubkeys {
             # permissions and ownership
             echo "        +-- making sure permissions are AOK..."
             # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
-            chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+            chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
                 echo "WARNING: unable to change ownership!"
-            chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+            chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
                 echo "WARNING: unable to change permissions!"
             # now the important stuff
             echo "        +-- reloading kuvert config and keyring..."
-            su -p -c "env PATH=\"$PATH\" kuvert -r" "$KUVERT_USER"
+            su -p -c "env PATH=\"$PATH\" kuvert -r -c \"${KUVERT_CONFIG_DIR}/kuvert.conf\"" "$KUVERT_USER"
         fi
     done
 }
@@ -209,17 +209,24 @@ echo -ne "+-- keys in keyring: "
 # this has to be run as the target user
 su -p -c "env PATH=\"$PATH\" gpg --list-keys" "$KUVERT_USER" 2>/dev/null | egrep '^pub' | wc -l
 
-# if there are no secret keys in the keyring,
-# generate a new password-less secret key
-# "|| true" required due to "set -e", in case secret keyring is empty and egrep finds nothing
-SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )" || true
-if [[ "$SECRET_KEYS" == "" ]]; then
-    echo "+-- no secret keys found, generating one for: $KUVERT_USER@localhost"
-    echo
-    echo "    WARNING: this secret key will not be password-protected!"
-    echo
-    # https://www.gnupg.org/documentation/manuals/gnupg/Unattended-GPG-key-generation.html
-    su -p -c "env PATH=\"$PATH\" gpg --batch --gen-key" "$KUVERT_USER" <<EOT
+# 
+# do we need to check for secret keys?
+if [ "$KUVERT_DEBUG_NO_GENKEY" != "" ]; then
+    echo "WARNING: not generating private GnuPG keys, since"
+    echo "WARNING: \$KUVERT_DEBUG_NO_GENKEY flag is set"
+else
+    # if there are no secret keys in the keyring,
+    # generate a new password-less secret key
+
+    # "|| true" required due to "set -e", in case secret keyring is empty and egrep finds nothing
+    SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )" || true
+    if [[ "$SECRET_KEYS" == "" ]]; then
+        echo "+-- no secret keys found, generating one for: $KUVERT_USER@localhost"
+        echo
+        echo "    WARNING: this secret key will not be password-protected!"
+        echo
+        # https://www.gnupg.org/documentation/manuals/gnupg/Unattended-GPG-key-generation.html
+        su -p -c "env PATH=\"$PATH\" gpg --batch --gen-key" "$KUVERT_USER" <<EOT
 %no-protection
 Key-Type: RSA
 Key-Length: 4096
@@ -230,10 +237,11 @@ Name-Email: $KUVERT_USER@localhost
 Expire-Date: 0
 %commit
 EOT
-    echo "    +-- done."
-else
-    echo -ne "+-- secret keys in keyring: "
-    echo "$SECRET_KEYS" | wc -l
+        echo "    +-- done."
+    else
+        echo -ne "+-- secret keys in keyring: "
+        echo "$SECRET_KEYS" | wc -l
+    fi
 fi
 
 # watch for changes with the keyring in the background

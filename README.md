@@ -70,7 +70,7 @@ GnuPG data directory, containing the keyring. Location will be used by `kuvert` 
  
 Config directory, should contain a `kuvert.conf` file, which will be used it by `kuvert`. The directory will be created and permissions will be set as required. Volume-mount it into the docker container upon running it to make the config from the host system available in the container for `kuvert` to use. If the config file is not provided, an attempt will be made to generate one (read on).
 
-### Generated config
+#### Generated config
 
 Optionally, a config file can be auto-generated based on environment variables from this section. The config will be generated if `$KUVERT_CONFIG_DIR/kuvert.conf` file does not exist (otherwise it is assumed that it contains a valid config).
 
@@ -140,7 +140,12 @@ Refer to [`kuvert` man page](http://snafu.priv.at/mystuff/kuvert/kuvert-man.txt)
     
  - `KUVERT_CFG_ALWAYSTRUST` (default: "`t`")  
     *kuvert config option: `alwaystrust`*
-    
+
+#### Debug environment variables
+
+ - `KUVERT_DEBUG_NO_GENKEY` (default: emtpy string)
+
+If this envvar is set to anything other than empty string, GnuPG private keys will not be generated in case there are no available.
 
 ### Reporting issues with docker configuration
 
