@@ -76,6 +76,8 @@ Optionally, a config file can be auto-generated based on environment variables f
 
 Please note, not all `kuvert` config options are exposed this way, since exposing some would simply not make any sense. Certain assumptions are made in the generated config file, please refer to comments in `generate-kuvert-conf.sh` file.
 
+For config to be successfuly generated at least the four mandatory options have to be set: `$KUVERT_CFG_MSSERVER`, `$KUVERT_CFG_MSUSER`, `$KUVERT_CFG_MSPASS`, and `$KUVERT_CFG_MAPASS`.
+
 Refer to [`kuvert` man page](http://snafu.priv.at/mystuff/kuvert/kuvert-man.txt) for explanations of all options.
 
  - `$KUVERT_CFG_DEFAULTKEY` (optional)  
