@@ -85,8 +85,8 @@ On other systems you need to do the following:
 
 You need `perl` 5.10+, `gpg` and a raft of perl modules:
 `MIME::Parser`, `Mail::Address`, `Net::SMTP` 1.28 (in core but not new enough
-with some distributions), `IO::Socket::SSL 2.007`, `Net::Server::Mail::ESMTP`,
-`Sys::Hostname`, `Authen::SASL`, `IO::Socket::INET`, `Filehandle`, `File::Slurp`,
+with some distributions), `IO::Socket::SSL` 2.007, `Net::Server::Mail::ESMTP`,
+`Sys::Hostname`, `Authen::SASL`, `IO::Socket::INET`, `FileHandle`, `File::Slurp`,
 `File::Temp`, `Fcntl`, `Time::HiRes`, `Proc::ProcessTable`, and `Encode::Locale`.
 Some of those are part of a standard perl intall, others you'll have to
 get from your nearest CPAN archive and install.
