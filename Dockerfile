@@ -50,4 +50,8 @@ RUN cd /usr/local/src/kuvert/ && \
 RUN chmod a+x /usr/local/src/kuvert/run.sh
 
 ENTRYPOINT ["/usr/local/src/kuvert/run.sh"]
-CMD ["kuvert", "-d"]
+
+# KUVERT_CONFIG_DIR envvar is being set in run.sh
+# can't set it here because by default it is relative to KUVERT_HOME
+# and if that is set in docker run, KUVERT_CONFIG_DIR would not get set
+CMD ["kuvert", "-d", "-c", "${KUVERT_CONFIG_DIR}/kuvert.conf"]
