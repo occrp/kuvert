@@ -4,7 +4,7 @@
 # does gpg signing/signing+encrypting transparently, based
 # on the content of your public keyring(s) and your preferences.
 #
-# copyright (c) 1999-2014 Alexander Zangerl <az@snafu.priv.at>
+# copyright (c) 1999-2017 Alexander Zangerl <az@snafu.priv.at>
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License version 2
@@ -27,10 +27,12 @@ use Fcntl qw(:flock);
 use Getopt::Std;
 use MIME::Parser;		# for parsing the mime-stream
 use Mail::Address;		# for parsing to and cc-headers
-use Net::SMTP;			# for sending via smtp
+use Net::SMTP 1.28;		# for sending email, smtp, smtps and starttls
+use IO::Socket::SSL;	# ssl is not on always but less hassle to depend on the module here
 use Sys::Hostname;		# ditto
 use Net::Server::Mail::ESMTP;	# for receiving via smtp
 use IO::Socket::INET;		# ditto
+
 use FileHandle;
 use File::Slurp;
 use File::Find;
@@ -60,16 +62,18 @@ my $timeout=600;		# seconds to wait for gpg
 my (%config,$debug,%email2key);
 
 my %options;
-if (!getopts("dork",\%options) || @ARGV)
+if (!getopts("dorkc:",\%options) || @ARGV)
 {
-	die "usage: $progname [-d] [-o] [-r|-k]
+	die "usage: $progname [-d] [-o] [-r|-k] [-c configfile]
 -k: kill running $progname daemon
 -d: debug mode
 -r: reload keyrings and configfile
 -o: one-shot mode, run queue once and exit
+-c <configfile>: use alternate config file instead of ~/.kuvert
 This is: $progname $version.\n";
 }
 $debug=$options{"d"};
+$rcfile = $options{c} if ($options{c});
 
 die("no configuration file exists. See man $progname(1) for details.\n")
     if (!-e $rcfile);
@@ -805,6 +809,7 @@ sub read_config
 		# $$ not good in tempdir: config is read before fork, then possibly again on -r but by a different process
 		tempdir=>($ENV{'TMPDIR'}?$ENV{'TMPDIR'}:"/tmp")."/kuvert.$username",
 		alwaystrust=>undef,
+		gpg => "gpg",
 		interval=>60,
 		"query-secret"=>"/bin/sh -c 'stty -echo; read -p \"Passphrase %s: \" X; stty echo; echo \$X'",
 		"flush-secret"=>undef,
@@ -892,6 +897,13 @@ with the new config file in place.\n");
 						if ($value && !-x (split(/\s+/,$value))[0]);
 				$options{$key}=$value;
 	    }
+			# full program path
+			elsif ($key eq "gpg")
+			{
+				bailout("bad value \"$value\" for key \"$key\": not executable")
+						if (!-x $value);
+				$options{$key} = $value;
+			}
 	    # program with %s escape
 	    elsif ($key =~ /^(query-secret|flush-secret)$/)
 	    {
@@ -1023,7 +1035,7 @@ sub read_keyring
 	logit("reading keyring...");
 	my $tf="$config{tempdir}/subproc";
 
-	my @tmp=`gpg -q --batch --list-keys --with-colons --no-expensive-trust-checks 2>$tf`;
+	my @tmp=`$config{gpg} -q --batch --list-keys --with-colons --no-expensive-trust-checks 2>$tf`;
 	bailout("keyring reading failed: $?",(-r $tf && readfile($tf)))
 			if ($? or $? >> 8);
 	logit("finished reading keyring");
@@ -1096,25 +1108,33 @@ sub send_entity
 {
 	my ($ent,$from,@recips,)=@_;
 
+
 	if ($config{msserver} && $config{msport})
 	{
 		my $dom=hostname;
 
-		my $s=Net::SMTP->new( $config{msserver}, Port => $config{msport},
-													 Hello => $dom,
-													 (($config{ssl} && $config{ssl} ne 'starttls') ? (SSL => 1) : ()),
-													 SSL_key_file => $config{"ssl-key"},
-													 SSL_cert_file => $config{"ssl-cert"},
-													 SSL_ca_file => $config{"ssl-ca"} );
-		return("Cannot connect to mail server ".$config{msserver}.": $!")
+		$IO::Socket::SSL::DEBUG = 3 if ($config{ssl} && $debug);
+		my $s=Net::SMTP->new( $config{msserver},
+													Port => $config{msport},
+													Hello => $dom,
+													SSL => (defined $config{ssl} && $config{ssl} eq "ssl"? 1 : undef),
+													SSL_key_file => $config{"ssl-key"},
+													SSL_cert_file => $config{"ssl-cert"},
+													SSL_ca_file => $config{"ssl-ca"},
+													Debug => $debug);
+		return("Cannot connect to mail server ".$config{msserver}.": $@")
 				if (!$s);
-                if ($config{ssl} and $config{ssl} eq 'starttls') { $s->starttls or die "Starttls failed: $@" }
+		# do negotiate starttls if asked to
+		if (defined $config{ssl} && $config{ssl} eq "starttls")
+		{
+			$s->starttls or return ("Cannot negotiate STARTTLS: $@");
+		}
 		# do smtp auth if asked to
 		if ($config{msuser})
 		{
-	    my $authed;
-	    while (!$authed)
-	    {
+			my $authed;
+			while (!$authed)
+			{
 				if (!$config{mspass} && $config{"mspass-from-query-secret"})
 				{
 					my $cmd=sprintf($config{"query-secret"},"smtp-password");
@@ -1142,7 +1162,7 @@ sub send_entity
 						return("SMTP auth failed: ".$s->code." ".$s->message);
 					}
 				}
-	    }
+			}
 		}
 
 		$s->mail($from)
@@ -1193,7 +1213,7 @@ sub send_entity
 sub sign_encrypt
 {
 	my ($signkey,$infile,$outfile,@recips)=@_;
-	my @cmd=qw(gpg -q -t -a --batch --status-fd 2);
+	my @cmd = ($config{gpg},qw(-q -t -a --batch --status-fd 2));
 	my ($precmd,$pid);
 
 	push @cmd,"--always-trust" if ($config{alwaystrust});
@@ -1562,7 +1582,7 @@ kuvert - Automatically sign and/or encrypt emails based on the recipients
 
 =head1 SYNOPSIS
 
-kuvert [-d] [-o] [-r|-k]
+kuvert [-d] [-o] [-r|-k] [-c configfile]
 
 =head1 DESCRIPTION
 
@@ -1609,6 +1629,10 @@ respective process.
 
 Tells a running kuvert daemon to terminate cleanly. This is equivalent
 to sending a SIGTERM to the respective process.
+
+=item -c <configfile>
+
+Tells kuvert to use the given config file instead of ~/.kuvert.
 
 =back
 
@@ -2014,6 +2038,12 @@ This is ignored if msserver is set. The argument must include the
 full path to the program, and the program must accept the common mail transfer
 agent arguments as defined in the Linux Standards Base
 (see L<http://refspecs.linux-foundation.org/LSB_2.0.0/LSB-Core/LSB-Core.html#BASELIB-SENDMAIL-1>).
+
+=item gpg <program-path>
+
+Defines which custom GnuPG executable kuvert should use.
+If this option is given the argument must be a full path to an executable.
+Default: "gpg", i.e. anywhere in the path.
 
 =item can-detach <boolean>
 

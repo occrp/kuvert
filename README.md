@@ -83,10 +83,11 @@ at `/usr/share/doc/kuvert/examples/dot-kuvert`.
 
 On other systems you need to do the following:
 
-you need perl perl 5.004+, gpg and a raft of perl modules:
-`MIME::Parser`, `Mail::Address`, `Net::SMTPS`, `Sys::Hostname`, `Net::Server::Mail`,
-`Authen::SASL`, `IO::Socket::INET`, `Filehandle`, `File::Slurp`, `File::Temp`, `Fcntl`,
-`Time::HiRes`, `Proc::ProcessTable`, and `Encode::Locale`.
+You need `perl` 5.10+, `gpg` and a raft of perl modules:
+`MIME::Parser`, `Mail::Address`, `Net::SMTP` 1.28 (in core but not new enough
+with some distributions), `IO::Socket::SSL 2.007`, `Net::Server::Mail::ESMTP`,
+`Sys::Hostname`, `Authen::SASL`, `IO::Socket::INET`, `Filehandle`, `File::Slurp`,
+`File::Temp`, `Fcntl`, `Time::HiRes`, `Proc::ProcessTable`, and `Encode::Locale`.
 Some of those are part of a standard perl intall, others you'll have to
 get from your nearest CPAN archive and install.
 Optional: get linux-kernel keyutils package, the gpg-agent or some 
