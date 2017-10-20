@@ -41,7 +41,7 @@ else
     # $2 - value (empty string means "unset")
     function optional_option {
         if [ "$2" != "" ]; then
-            echo "$1 $2" > "$KUVERT_CONFIG_DIR/kuvert.conf"
+            echo "$1 $2" >> "$KUVERT_CONFIG_DIR/kuvert.conf"
         fi
     }
 
@@ -55,7 +55,7 @@ else
             echo "ERROR: or make sure to set all mandatory config evironment variables"
             exit 2
         fi
-        echo "$1 $2" > "$KUVERT_CONFIG_DIR/kuvert.conf"
+        echo "$1 $2" >> "$KUVERT_CONFIG_DIR/kuvert.conf"
     }
 
     # $1 - kuvert config option name 
@@ -64,10 +64,10 @@ else
     function default_option {
         if [ "$2" != "" ]; then
             # we have the option set explicitly, use that
-            echo "$1 $2" > "$KUVERT_CONFIG_DIR/kuvert.conf"
+            echo "$1 $2" >> "$KUVERT_CONFIG_DIR/kuvert.conf"
         else
             # no explicit value, use the default
-            echo "$1 $3" > "$KUVERT_CONFIG_DIR/kuvert.conf"
+            echo "$1 $3" >> "$KUVERT_CONFIG_DIR/kuvert.conf"
         fi
     }
 
