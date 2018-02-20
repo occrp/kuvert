@@ -30,7 +30,7 @@ function watch_pubkeys {
             echo "        +-- making sure permissions are AOK..."
             
             # which GnuPG version are we talking about
-            if stat -t *.gpg~ >/dev/null 2>&1 ; then
+            if stat -t "$KUVERT_GNUPG_DIR/"*.gpg~ >/dev/null 2>&1 ; then
                 # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
                 chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
                     echo "WARNING: unable to change ownership!"
