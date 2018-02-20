@@ -11,7 +11,7 @@ function watch_pubkeys {
         set +e # yeah, inotifywatch can return a different return code than 0, and we have to be fine with that
         
         # watch for files depending on GnuPG version
-        if stat -t *.gpg~ >/dev/null 2>&1 ; then
+        if stat -t "$KUVERT_GNUPG_DIR/"*.gpg~ >/dev/null 2>&1 ; then
             # GnuPG v1.x
             inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
         else
