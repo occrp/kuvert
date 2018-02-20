@@ -228,7 +228,7 @@ chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_HOME"/.profile
 # creating it if needed
 echo -ne "+-- keys in keyring: "
 # this has to be run as the target user
-su -p -c "env PATH=\"$PATH\" gpg --list-keys" "$KUVERT_USER" 2>/dev/null | egrep '^pub' | wc -l
+su -p -c "env PATH=\"$PATH\" gpg2 --list-keys" "$KUVERT_USER" 2>/dev/null | egrep '^pub' | wc -l
 
 # 
 # do we need to check for secret keys?
@@ -240,14 +240,14 @@ else
     # generate a new password-less secret key
 
     # "|| true" required due to "set -e", in case secret keyring is empty and egrep finds nothing
-    SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )" || true
+    SECRET_KEYS="$( su -p -c "env PATH=\"$PATH\" gpg2 --list-secret-keys" "$KUVERT_USER" 2>/dev/null | egrep '^sec' )" || true
     if [[ "$SECRET_KEYS" == "" ]]; then
         echo "+-- no secret keys found, generating one for: $KUVERT_USER@localhost"
         echo
         echo "    WARNING: this secret key will not be password-protected!"
         echo
         # https://www.gnupg.org/documentation/manuals/gnupg/Unattended-GPG-key-generation.html
-        su -p -c "env PATH=\"$PATH\" gpg --batch --gen-key" "$KUVERT_USER" <<EOT
+        su -p -c "env PATH=\"$PATH\" gpg2 --batch --gen-key" "$KUVERT_USER" <<EOT
 %no-protection
 Key-Type: RSA
 Key-Length: 4096
