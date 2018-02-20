@@ -26,8 +26,8 @@ function watch_pubkeys {
         if [ $? -eq 0 ]; then
             echo "    +-- files in $KUVERT_GNUPG_DIR changed"
             # we need to wait for gpg to finish its stuff
-            echo "        +-- continuing in 3s..."
-            sleep 3
+            echo "        +-- continuing in 5s..."
+            sleep 5
             # permissions and ownership
             echo "        +-- making sure permissions are AOK..."
             

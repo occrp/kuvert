@@ -74,7 +74,7 @@ else
     # 
     # preamble
     # also, cleaning of the config file
-    echo <<EOF > "$KUVERT_CONFIG_DIR/kuvert.conf"
+    cat <<EOF > "$KUVERT_CONFIG_DIR/kuvert.conf"
 
 # kuvert config file generated for use in a docker container
 # 
