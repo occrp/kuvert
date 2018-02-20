@@ -11,14 +11,14 @@ function watch_pubkeys {
         set +e # yeah, inotifywatch can return a different return code than 0, and we have to be fine with that
         
         # watch for files depending on GnuPG version
-        if stat -t "$KUVERT_GNUPG_DIR/"*.gpg~ >/dev/null 2>&1 ; then
-            # GnuPG v1.x
-            echo "    +-- GnuPG 1.x format detected, watching *.gpg and *.gpg~"
-            inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
-        else
+        if stat -t "$KUVERT_GNUPG_DIR/"*.kbx~ >/dev/null 2>&1 ; then
             # GnuPG v2.x
             echo "    +-- GnuPG 2.x format detected, watching *.gpg and *.kbx"
             inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx
+        else
+            # GnuPG v1.x
+            echo "    +-- GnuPG 1.x format detected, watching *.gpg and *.gpg~"
+            inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
         fi
         
         set -e # back to being strict about stuff
@@ -32,17 +32,17 @@ function watch_pubkeys {
             echo "        +-- making sure permissions are AOK..."
             
             # which GnuPG version are we talking about
-            if stat -t "$KUVERT_GNUPG_DIR/"*.gpg~ >/dev/null 2>&1 ; then
-                # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
-                chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
-                    echo "WARNING: unable to change ownership!"
-                chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
-                    echo "WARNING: unable to change permissions!"
-            else
+            if stat -t "$KUVERT_GNUPG_DIR/"*.kbx~ >/dev/null 2>&1 ; then
                 # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
                 chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
                     echo "WARNING: unable to change ownership!"
                 chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx || \
+                    echo "WARNING: unable to change permissions!"
+            else
+                # just the relevant files, gpg creates .lock and .tmp files too, we're going to ignore those
+                chown "$KUVERT_USER":"$KUVERT_GROUP" "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
+                    echo "WARNING: unable to change ownership!"
+                chmod u=rwX,go= "$KUVERT_GNUPG_DIR/" "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~ || \
                     echo "WARNING: unable to change permissions!"
             fi
             # now the important stuff
