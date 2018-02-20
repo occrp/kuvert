@@ -13,9 +13,11 @@ function watch_pubkeys {
         # watch for files depending on GnuPG version
         if stat -t "$KUVERT_GNUPG_DIR/"*.gpg~ >/dev/null 2>&1 ; then
             # GnuPG v1.x
+            echo "    +-- GnuPG 1.x format detected, watching *.gpg and *.gpg~"
             inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.gpg~
         else
             # GnuPG v2.x
+            echo "    +-- GnuPG 2.x format detected, watching *.gpg and *.kbx"
             inotifywait -r -e modify -e move -e create -e delete -qq "$KUVERT_GNUPG_DIR/"*.gpg "$KUVERT_GNUPG_DIR/"*.kbx
         fi
         
